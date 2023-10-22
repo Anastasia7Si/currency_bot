@@ -71,19 +71,19 @@ class TelegramBot:
         job_queue = context.job_queue
         if user.subscribed is False:
             jobs = job_queue.get_jobs_by_name('send_rate_subscribe')
-            if len(jobs) == 0:
-                updated_rate = self.get_dollar_rate(update, context)
-                if updated_rate is not None:
+            updated_rate = self.get_dollar_rate(update, context)
+            if updated_rate is not None:
+                if len(jobs) == 0:
                     UserRate.create(user_id=user_id, rate=updated_rate)
                     job_queue.run_repeating(
-                       self.send_rate_subscribe,
-                       interval=60,
-                       context=user_id,
-                       name='send_rate_subscribe'
+                      self.send_rate_subscribe,
+                      interval=60,
+                      context=user_id,
+                      name='send_rate_subscribe'
                     )
                     context.bot.send_message(
-                       chat_id=user_id,
-                       text='Подписка на курс доллара успешно оформлена.'
+                      chat_id=user_id,
+                      text='Подписка на курс доллара успешно оформлена.'
                     )
                     user.subscribed = True
                     user.save()
