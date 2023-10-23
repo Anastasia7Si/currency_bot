@@ -21,7 +21,7 @@ class AddBot:
     def __init__(self, token, db):
         self.updater = None
         self.dp = None
-        self.dp = None
+        self.db = db
 
     def start(self):
         pass
@@ -37,7 +37,7 @@ class TelegramBot:
             ['/start'], ['/dollar_rate'],
             ['/subscribe'], ['/history']],
             resize_keyboard=True)
-# self.add_bot = AddBot()
+        self.add_bot = AddBot(token=self.updater, db=self.db)
 
     def start(self, update, context):
         user_id = update.effective_user.id
@@ -47,7 +47,7 @@ class TelegramBot:
             text='Привет, я - Валютный бот!',
             reply_markup=self.button
             )
-# self.add_bot.start()
+        self.add_bot.start()
 
     def get_rate(self, user_id):
         response = None
@@ -129,7 +129,7 @@ class TelegramBot:
             'subscribe', self.get_subscribe_updates)
         )
         self.dp.add_handler(CommandHandler('history', self.get_history))
-# self.dp.add_handler(CommandHandler('add_bot_command', self.add_bot))
+        self.dp.add_handler(CommandHandler('add_bot_command', self.add_bot))
         self.updater.start_polling()
         self.updater.idle()
 
@@ -137,3 +137,4 @@ class TelegramBot:
 if __name__ == '__main__':
     bot = TelegramBot(token=secret_token, db=db)
     bot.main()
+    
