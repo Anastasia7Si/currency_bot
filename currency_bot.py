@@ -49,7 +49,7 @@ class TelegramBot:
             )
 # self.add_bot.start()
 
-    def get_dollar_rate(self, update, context):
+    def get_rate(self, user_id):
         response = None
         try:
             response = requests.get(URL)
@@ -57,13 +57,16 @@ class TelegramBot:
             logging.error(f'Ошибка при запросе к серверу: {error}. '
                           f'Пожалуйста, попробуйте позже')
         if response is not None:
-            user_id = update.effective_user.id
             response = response.json()
             dollar_rate = response['Valute']['USD']['Value']
             UserRate.create(user_id=user_id, rate=dollar_rate)
-            massege = f'Текущий курс доллара {dollar_rate} рублей.'
-            context.bot.send_message(chat_id=user_id, text=massege)
             return dollar_rate
+
+    def get_dollar_rate(self, update, context):
+        user_id = update.effective_user.id
+        dollar_rate = self.get_rate(user_id=user_id)
+        message = f'Текущий курс доллара {dollar_rate} рублей.'
+        context.bot.send_message(chat_id=user_id, text=message)
 
     def get_subscribe_updates(self, update, context):
         user_id = update.effective_user.id
@@ -71,15 +74,14 @@ class TelegramBot:
         job_queue = context.job_queue
         if user.subscribed is False:
             jobs = job_queue.get_jobs_by_name('send_rate_subscribe')
-            updated_rate = self.get_dollar_rate(update, context)
+            updated_rate = self.get_rate(user_id=user_id)
             if updated_rate is not None:
                 if len(jobs) == 0:
-                    UserRate.create(user_id=user_id, rate=updated_rate)
                     job_queue.run_repeating(
-                      self.send_rate_subscribe,
-                      interval=60,
-                      context=user_id,
-                      name='send_rate_subscribe'
+                        self.send_rate_subscribe,
+                        interval=60,
+                        context=user_id,
+                        name='send_rate_subscribe'
                     )
                     context.bot.send_message(
                       chat_id=user_id,
